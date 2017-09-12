@@ -26,59 +26,38 @@ async def testing():
     
 @bot.command()
 async def roll(dice : str):
-    ##Start out assuming modifier is zero
-    subtract = False
-    addative = 0
-    sign = ' + '
-    ##check for valid user syntax
-    try:
-        ##try to map rolls to ints by splitting along d -- only works if no modifier is specified
-        try:
-            ##rolls = number of dice, limit == number of faces on the dice
-            rolls, limit = map(int, dice.split('d'))
-            addative=0
-        ##handle the modifier
-        except Exception:
-            ##split using the 'd' character
-            ##[0] will be number of dice, [1] 'd', [2] everything else
-            split=re.split('d',dice)
-            rolls=int(split[0])
-            ##split everything after the d using + or -
-            modsplit = re.split("([+-])", split[1])
-            ##limit == number of face on the dice, comes before the + or -
-            limit = modsplit[0]
-            ##check if modifier is meant to subtract
-            if modsplit[1] == '-':
-                subtract = True
-            ##get the actual modifier value
-            modifier = modsplit[2]
-            try:
-                ##try to convert modifier string to an int
-                addative=int(modifier)
-            except Exception:
-                ##user-specified modifier wasn't an int
-                await bot.say('modifier must be an integer')
-    ##invalid user syntax
-    except Exception:
-        await bot.say('The correct format is #d# + or - # (no spaces)')
-        return
-        
-    ##handle a negative modifier
-    if subtract:
-        sign = ' - '
-        diceSum = 0-addative
-    else:
-        diceSum=addative
-        
-    ##formatting the result string and adding rolls to the total
+    ##initializing some attributes
+    modifier = False
+    mod = ''
+    diceSum=0
     result = '('
+        
+    ##check to see if user specified a modifier for the roll
+    if '+' in dice or '-' in dice:
+        modifier = True
+    
+    ##split along whitespace and positive/negative signs
+    SplitInput = re.split(r'[-+d\s]+',dice)
+    print(SplitInput)
+    ##assign number of rolls and the number of faces per die
+    rolls = int(SplitInput[0])
+    numberOfFaces = int(SplitInput[1])
+    ##handling modifier if present
+    if modifier:
+        if '-' in dice:
+            diceSum -= int(SplitInput[2])
+        else:
+            diceSum += int(SplitInput[2])
+        mod = str(diceSum)
+
+    ##calculating results & building output string
     for r in range(rolls):
-        die = random.randint(1,int(limit))
+        die = random.randint(1,int(numberOfFaces))
         diceSum += die
         result += str(die)
         if r != rolls-1:
             result += ' + '
-    result += ') ' + sign + str(addative) + ' = ' + str(diceSum)
+    result += ') ' + mod + ' = ' + str(diceSum)
     await bot.say(result)
 
     
